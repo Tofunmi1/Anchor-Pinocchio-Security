@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Anchor
+target/
+.anchor/
+
+# Test artifacts
+test-ledger/
+
+# IDE
+.idea/
+*.swp
+.vscode/
+
+# OS
+.DS_Store

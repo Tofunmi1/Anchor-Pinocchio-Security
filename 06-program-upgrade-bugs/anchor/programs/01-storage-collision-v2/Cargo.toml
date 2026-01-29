@@ -1,0 +1,15 @@
+[package]
+name = "storage-collision-v2"
+version = "0.1.0"
+description = "Storage Collision V2"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "storage_collision_v2"
+
+[features]
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"

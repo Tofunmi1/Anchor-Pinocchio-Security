@@ -1,0 +1,15 @@
+[package]
+name = "signature-vulnerable"
+version = "0.1.0"
+description = "Signature Bugs V1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "signature_vulnerable"
+
+[features]
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"

@@ -1,0 +1,20 @@
+[package]
+name = "precision-loss-vulnerable"
+version = "0.1.0"
+description = "CTF: Precision Loss - VULNERABLE"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "precision_loss_vulnerable"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }

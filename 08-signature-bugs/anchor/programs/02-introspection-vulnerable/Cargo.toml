@@ -1,0 +1,15 @@
+[package]
+name = "introspection-vulnerable"
+version = "0.1.0"
+description = "Ed25519 Introspection Vulnerability Demo"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "introspection_vulnerable"
+
+[features]
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"

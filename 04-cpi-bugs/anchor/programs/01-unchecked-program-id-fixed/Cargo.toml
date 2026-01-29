@@ -1,0 +1,22 @@
+[package]
+name = "unchecked-program-id-fixed"
+version = "0.1.0"
+description = "CTF: Unchecked Program ID - FIXED"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "unchecked_program_id_fixed"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+# anchor-spl = "0.32.1"
+# solana-program = "1.18"

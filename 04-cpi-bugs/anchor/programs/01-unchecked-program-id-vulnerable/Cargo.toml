@@ -1,0 +1,22 @@
+[package]
+name = "unchecked-program-id-vulnerable"
+version = "0.1.0"
+description = "CTF: Unchecked Program ID - VULNERABLE"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "unchecked_program_id_vulnerable"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+# anchor-spl = "0.32.1"  <-- Removed to avoid conflicts
+# solana-program = "1.18" <-- Removed

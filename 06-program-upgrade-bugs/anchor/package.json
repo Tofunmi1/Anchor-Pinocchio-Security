@@ -1,0 +1,21 @@
+{
+	"name": "program-upgrade-ctf",
+	"version": "1.0.0",
+	"description": "Program Upgrade Vulnerabilities",
+	"scripts": {
+		"test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+	},
+	"dependencies": {
+		"@coral-xyz/anchor": "^0.32.1"
+	},
+	"devDependencies": {
+		"@types/chai": "^4.3.0",
+		"@types/mocha": "^10.0.0",
+		"@types/node": "^18.0.0",
+		"chai": "^4.3.0",
+		"mocha": "^10.0.0",
+		"ts-mocha": "^10.0.0",
+		"ts-node": "^10.9.0",
+		"typescript": "^5.0.0"
+	}
+}
