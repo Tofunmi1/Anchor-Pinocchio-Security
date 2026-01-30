@@ -1,7 +1,9 @@
 # Anchor & Pinocchio Security
 
 A comprehensive learning resource for Solana program security, comparing **Anchor** (high-level) and **Pinocchio** (low-level) frameworks. This repository contains hands-on examples of common vulnerabilities, showing how each framework handles security differently.
-Apart from this general readme, each module has its own interactive file that goes into much more line by line detail about each vulnerablitiy and interactive tests, and real world examples. 
+
+Apart from this general readme, each module has its own interactive file that goes into much more line by line detail about each vulnerability and interactive tests, and real world examples.
+
 ---
 
 ## Table of Contents
