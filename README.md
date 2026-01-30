@@ -1,7 +1,7 @@
 # Anchor & Pinocchio Security
 
 A comprehensive learning resource for Solana program security, comparing **Anchor** (high-level) and **Pinocchio** (low-level) frameworks. This repository contains hands-on examples of common vulnerabilities, showing how each framework handles security differently.
-
+Apart from this general readme, each module has its own interactive file that goes into much more line by line detail about each vulnerablitiy and interactive tests, and real world examples. 
 ---
 
 ## Table of Contents
@@ -57,15 +57,6 @@ Everything on Solana is an account. Unlike Ethereum where contracts have their o
 
 4. **Rent**: Accounts must maintain a minimum lamport balance (rent-exempt) or they'll be garbage collected.
 
-```mermaid
-graph LR
-    subgraph "Account Ownership"
-        Wallet[User Wallet] -->|owned by| SystemProg[System Program]
-        TokenAcc[Token Account] -->|owned by| TokenProg[Token Program]
-        PDA[Program PDA] -->|owned by| YourProg[Your Program]
-    end
-```
-
 ### Transaction Flow
 
 ```mermaid
@@ -81,23 +72,6 @@ sequenceDiagram
     Program-->>Client: Result
 ```
 
-### Attack Surface Overview
-
-```mermaid
-flowchart TD
-    Root[Steal Funds] --> A[Bypass Access Control]
-    Root --> B[Corrupt State]
-    Root --> C[Exploit Math]
-    
-    A --> A1[Missing Signer]
-    A --> A2[Missing Owner]
-    
-    B --> B1[Reinitialization]
-    B --> B2[Type Confusion]
-    
-    C --> C1[Overflow]
-    C --> C2[Truncation]
-```
 
 This CTF provides:
 
@@ -113,7 +87,7 @@ This CTF provides:
 ```
 anchor-pinocchio-security/
 │
-├── README.md                           # This file
+├── README.md
 ├── 01-access-control/                  # Module 01: Access Control
 │   ├── README.md
 │   ├── anchor/programs/
@@ -241,19 +215,6 @@ Pinocchio is a zero-copy, lightweight framework for maximum performance:
 
 ### Framework Comparison
 
-```mermaid
-flowchart TB
-    subgraph Anchor
-        A1["Account macro"] --> A2[Auto discriminator]
-        A3[Constraints] --> A4["seeds, bump, has_one"]
-    end
-    
-    subgraph Pinocchio
-        P1[AccountInfo] --> P2[Manual byte access]
-        P3[Explicit checks] --> P4["is_signer, key compare"]
-    end
-```
-
 | Aspect | Anchor | Pinocchio |
 |--------|--------|-----------|
 | **Abstraction Level** | High-level, declarative | Low-level, explicit |
@@ -329,22 +290,6 @@ fn withdraw(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
 - Binary size matters (on-chain storage costs)
 - You need fine-grained control over memory
 - Your program is simple with few accounts
-
-### Module Implementations
-
-| Module | Anchor | Pinocchio |
-|--------|--------|-----------|
-| 01 - Access Control | Yes | Yes |
-| 02 - Account Life Cycle | Yes | Yes |
-| 03 - Logic and Arithmetic | Yes | Yes |
-| 04 - CPI Bugs | Yes | Yes |
-| 05 - Data Validation | Yes | Yes |
-| 06 - Program Upgrade | Yes | Yes |
-| 07 - Type Casting | Yes | Yes |
-| 08 - Signature Bugs | Yes | Yes |
-| 09 - Account Confusion | Yes | Yes |
-
----
 
 ## Prerequisites
 
@@ -478,15 +423,6 @@ pub struct Withdraw<'info> {
 
 Account lifecycle vulnerabilities arise from improper handling of account states during creation, update, and deletion operations.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Created: init
-    Created --> Active: has lamports
-    Active --> Active: update data
-    Active --> Closed: drain lamports
-    Closed --> [*]: garbage collected
-```
-
 **Vulnerabilities Covered**:
 
 - **Uninitialized Account Usage**: Using an account before it has been properly initialized, leading to undefined behavior.
@@ -495,24 +431,6 @@ stateDiagram-v2
 
 - **Unsafe Account Closing**: Failing to properly zero out account data when closing, leaving residual data that could be exploited.
 
-```mermaid
-sequenceDiagram
-    participant Alice
-    participant Program
-    participant Config
-    participant Attacker
-    
-    Alice->>Program: initialize(config)
-    Program->>Config: owner = Alice
-    
-    Attacker->>Program: initialize(config)
-    
-    alt Vulnerable
-        Program->>Config: owner = Attacker
-    else Fixed
-        Program-->>Attacker: Error: Already initialized
-    end
-```
 
 **Vulnerable Pattern**:
 
@@ -547,21 +465,6 @@ pub struct Initialize<'info> {
 **Location**: `03-logic-and-arithmetic-bugs/`
 
 Arithmetic vulnerabilities occur when mathematical operations produce unexpected results due to overflow, underflow, or precision loss.
-
-```mermaid
-flowchart TB
-    subgraph "Vulnerable: wrapping_add"
-        A1[balance = MAX - 100] --> A2[+ 200]
-        A2 --> A3[balance = 99 - Overflow!]
-    end
-    
-    subgraph "Fixed: checked_add"
-        B1[balance = MAX - 100] --> B2[checked_add 200]
-        B2 --> B3{Overflow?}
-        B3 -->|Yes| B4[Return Error]
-        B3 -->|No| B5[Update Balance]
-    end
-```
 
 **Vulnerabilities Covered**:
 
@@ -791,9 +694,62 @@ pub fn calculate(ctx: Context<Calculate>, multiplier: u64) -> Result<()> {
 
 Signature vulnerabilities occur when programs fail to properly verify cryptographic signatures or signature authorities.
 
+#### Signer vs Signature
+
+A critical distinction on Solana that often causes confusion:
+
+| Concept | Description | When to Use | Check Method |
+|---------|-------------|-------------|--------------|
+| **Signer** | Account that signed the *transaction* | Authorizing on-chain actions | `Signer<'info>` or `is_signer()` |
+| **Signature** | Off-chain signed *message* | Gasless transactions, delegated actions | Ed25519 program verification |
+
+**Signer** - Transaction Authorization:
+```rust
+// Anchor: Signer type automatically verified by runtime
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    pub authority: Signer<'info>,  // Must have signed the transaction
+}
+
+// Pinocchio: Manual check required
+if !authority.is_signer() {
+    return Err(ProgramError::MissingRequiredSignature);
+}
+```
+
+**Signature** - Off-chain Message Verification:
+```rust
+// For verifying off-chain signed messages (e.g., gasless meta-transactions)
+// The Ed25519 program must verify BEFORE your instruction
+
+// Transaction structure:
+// Instruction 0: Ed25519Program::verify(pubkey, message, signature)
+// Instruction 1: YourProgram::execute(message, signature)
+
+// In your program, verify Ed25519 instruction was included:
+pub fn execute_with_signature(
+    ctx: Context<Execute>,
+    message: Vec<u8>,
+    signature: [u8; 64],
+) -> Result<()> {
+    // Check instruction sysvar to confirm Ed25519 verification passed
+    verify_ed25519_in_transaction(
+        &ctx.accounts.instruction_sysvar,
+        &ctx.accounts.expected_signer.key(),
+        &message,
+        &signature,
+    )?;
+    
+    // Now safe to execute privileged operation
+    Ok(())
+}
+```
+
 **Vulnerabilities Covered**:
 
-- **Missing Signature Verification**: Accepting signed messages without verifying the signature.
+- **Missing Signature Verification**: Accepting signed messages without actually calling the Ed25519 program to verify.
+
+- **Signature Replay**: Allowing the same signature to be used multiple times. Fix with nonces or timestamps.
 
 - **Signature Malleability**: Not accounting for signature variations that represent the same authorization.
 
@@ -858,15 +814,3 @@ Study real-world audit reports to understand how these vulnerabilities manifest 
 - OtterSec Blog: https://osec.io/blog
 
 ---
-
-## License
-
-MIT License
-
-Copyright (c) 2024
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
