@@ -3,20 +3,20 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 declare_id!("AmmF1xed111111111111111111111111111111111111");
 
-/// ✅ FIXED AMM - All 8 Security Bugs Patched
+///  FIXED AMM - All 8 Security Bugs Patched
 /// 
 /// This program implements a secure constant product AMM (x * y = k)
 /// with proper security measures.
 /// 
 /// FIXES:
-/// 01. ✅ Slippage protection with min_amount_out
-/// 02. ✅ u128 for K calculation to prevent overflow
-/// 03. ✅ TWAP oracle instead of spot price
-/// 04. ✅ Signer check on withdraw
-/// 05. ✅ Fee calculation with proper rounding (round up)
-/// 06. ✅ Checks-Effects-Interactions pattern
-/// 07. ✅ Typed Account<Pool> with owner verification
-/// 08. ✅ PDA seeds for deterministic pool address
+/// 01.  Slippage protection with min_amount_out
+/// 02.  u128 for K calculation to prevent overflow
+/// 03.  TWAP oracle instead of spot price
+/// 04.  Signer check on withdraw
+/// 05.  Fee calculation with proper rounding (round up)
+/// 06.  Checks-Effects-Interactions pattern
+/// 07.  Typed Account<Pool> with owner verification
+/// 08.  PDA seeds for deterministic pool address
 
 const FEE_BPS: u64 = 30; // 0.3% fee (30 basis points)
 const PRECISION: u64 = 1_000_000; // 6 decimal precision for prices
@@ -25,7 +25,7 @@ const PRECISION: u64 = 1_000_000; // 6 decimal precision for prices
 pub mod amm_fixed {
     use super::*;
 
-    /// ✅ FIX #8: PDA seeds ensure deterministic, unique pool per token pair
+    ///  FIX #8: PDA seeds ensure deterministic, unique pool per token pair
     pub fn initialize(
         ctx: Context<Initialize>,
         fee_bps: u64,
@@ -46,7 +46,7 @@ pub mod amm_fixed {
         pool.total_lp_supply = 0;
         pool.fee_bps = fee_bps;
         pool.bump = ctx.bumps.pool;
-        // ✅ FIX #3: Initialize TWAP tracking
+        //  FIX #3: Initialize TWAP tracking
         pool.last_update = clock.unix_timestamp;
         pool.price_cumulative_a = 0;
         pool.price_cumulative_b = 0;
@@ -64,10 +64,10 @@ pub mod amm_fixed {
     ) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
 
-        // ✅ Update TWAP before changing reserves
+        //  Update TWAP before changing reserves
         update_twap(pool)?;
 
-        // ✅ FIX #2: Use u128 for K calculation to prevent overflow
+        //  FIX #2: Use u128 for K calculation to prevent overflow
         let lp_tokens = if pool.total_lp_supply == 0 {
             // First liquidity provider
             let k: u128 = (amount_a as u128)
@@ -91,10 +91,10 @@ pub mod amm_fixed {
             std::cmp::min(lp_a, lp_b)
         };
 
-        // ✅ Slippage protection for LP tokens
+        //  Slippage protection for LP tokens
         require!(lp_tokens >= min_lp_tokens, AmmError::SlippageExceeded);
 
-        // ✅ FIX #6: Update state BEFORE external calls (Checks-Effects-Interactions)
+        //  FIX #6: Update state BEFORE external calls (Checks-Effects-Interactions)
         pool.reserve_a = pool.reserve_a.checked_add(amount_a).ok_or(AmmError::Overflow)?;
         pool.reserve_b = pool.reserve_b.checked_add(amount_b).ok_or(AmmError::Overflow)?;
         pool.total_lp_supply = pool.total_lp_supply.checked_add(lp_tokens).ok_or(AmmError::Overflow)?;
@@ -150,7 +150,7 @@ pub mod amm_fixed {
         Ok(())
     }
 
-    /// ✅ FIX #4: lp_owner is now Signer<'info>
+    ///  FIX #4: lp_owner is now Signer<'info>
     pub fn remove_liquidity(
         ctx: Context<RemoveLiquidity>,
         lp_amount: u64,
@@ -159,7 +159,7 @@ pub mod amm_fixed {
     ) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
 
-        // ✅ Update TWAP before changing reserves
+        //  Update TWAP before changing reserves
         update_twap(pool)?;
 
         // Calculate tokens to return using checked math
@@ -175,11 +175,11 @@ pub mod amm_fixed {
             .checked_div(pool.total_lp_supply as u128)
             .ok_or(AmmError::Overflow)? as u64;
 
-        // ✅ Slippage protection
+        //  Slippage protection
         require!(amount_a >= min_amount_a, AmmError::SlippageExceeded);
         require!(amount_b >= min_amount_b, AmmError::SlippageExceeded);
 
-        // ✅ FIX #6: Update state BEFORE external calls
+        //  FIX #6: Update state BEFORE external calls
         pool.reserve_a = pool.reserve_a.checked_sub(amount_a).ok_or(AmmError::InsufficientLiquidity)?;
         pool.reserve_b = pool.reserve_b.checked_sub(amount_b).ok_or(AmmError::InsufficientLiquidity)?;
         pool.total_lp_supply = pool.total_lp_supply.checked_sub(lp_amount).ok_or(AmmError::InsufficientLiquidity)?;
@@ -191,7 +191,7 @@ pub mod amm_fixed {
                 token::Burn {
                     mint: ctx.accounts.lp_mint.to_account_info(),
                     from: ctx.accounts.user_lp_account.to_account_info(),
-                    authority: ctx.accounts.lp_owner.to_account_info(), // ✅ Now verified as Signer
+                    authority: ctx.accounts.lp_owner.to_account_info(), //  Now verified as Signer
                 },
             ),
             lp_amount,
@@ -236,16 +236,16 @@ pub mod amm_fixed {
         Ok(())
     }
 
-    /// ✅ FIXES #1, #2, #5, #6: Secure swap implementation
+    ///  FIXES #1, #2, #5, #6: Secure swap implementation
     pub fn swap(
         ctx: Context<Swap>,
         amount_in: u64,
-        min_amount_out: u64, // ✅ FIX #1: Slippage protection
+        min_amount_out: u64, //  FIX #1: Slippage protection
         is_a_to_b: bool,
     ) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
 
-        // ✅ Update TWAP before changing reserves
+        //  Update TWAP before changing reserves
         update_twap(pool)?;
 
         let (reserve_in, reserve_out) = if is_a_to_b {
@@ -256,7 +256,7 @@ pub mod amm_fixed {
 
         require!(reserve_in > 0 && reserve_out > 0, AmmError::InsufficientLiquidity);
 
-        // ✅ FIX #5: Fee calculation with ceiling division (round UP)
+        //  FIX #5: Fee calculation with ceiling division (round UP)
         // fee = ceil(amount_in * fee_bps / 10000)
         let fee = amount_in
             .checked_mul(pool.fee_bps)
@@ -268,7 +268,7 @@ pub mod amm_fixed {
 
         let amount_in_after_fee = amount_in.checked_sub(fee).ok_or(AmmError::Overflow)?;
 
-        // ✅ FIX #2: Use u128 for K calculation to prevent overflow
+        //  FIX #2: Use u128 for K calculation to prevent overflow
         let k: u128 = (reserve_in as u128)
             .checked_mul(reserve_out as u128)
             .ok_or(AmmError::Overflow)?;
@@ -285,10 +285,10 @@ pub mod amm_fixed {
             .checked_sub(new_reserve_out)
             .ok_or(AmmError::InsufficientLiquidity)? as u64;
 
-        // ✅ FIX #1: Enforce slippage protection
+        //  FIX #1: Enforce slippage protection
         require!(amount_out >= min_amount_out, AmmError::SlippageExceeded);
 
-        // ✅ FIX #6: Update state BEFORE external calls (Checks-Effects-Interactions)
+        //  FIX #6: Update state BEFORE external calls (Checks-Effects-Interactions)
         if is_a_to_b {
             pool.reserve_a = new_reserve_in as u64;
             pool.reserve_b = new_reserve_out as u64;
@@ -353,7 +353,7 @@ pub mod amm_fixed {
         Ok(())
     }
 
-    /// ✅ FIX #3: TWAP oracle instead of manipulable spot price
+    ///  FIX #3: TWAP oracle instead of manipulable spot price
     pub fn get_twap(ctx: Context<GetPrice>, seconds: u64) -> Result<(u64, u64)> {
         let pool = &ctx.accounts.pool;
         let clock = Clock::get()?;
@@ -409,7 +409,7 @@ pub mod amm_fixed {
 // ACCOUNT STRUCTURES
 // ============================================================================
 
-/// ✅ FIX #8: PDA seeds for deterministic pool address
+///  FIX #8: PDA seeds for deterministic pool address
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(
@@ -500,7 +500,7 @@ pub struct AddLiquidity<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-/// ✅ FIX #4: lp_owner is now Signer<'info>
+///  FIX #4: lp_owner is now Signer<'info>
 #[derive(Accounts)]
 pub struct RemoveLiquidity<'info> {
     #[account(
@@ -547,14 +547,14 @@ pub struct RemoveLiquidity<'info> {
     )]
     pub user_lp_account: Account<'info, TokenAccount>,
 
-    /// ✅ FIX #4: Now requires signature proof!
+    ///  FIX #4: Now requires signature proof!
     #[account(mut)]
     pub lp_owner: Signer<'info>,
     
     pub token_program: Program<'info, Token>,
 }
 
-/// ✅ FIX #7: Uses typed Account<Pool> with automatic owner verification
+///  FIX #7: Uses typed Account<Pool> with automatic owner verification
 #[derive(Accounts)]
 pub struct Swap<'info> {
     #[account(
@@ -562,7 +562,7 @@ pub struct Swap<'info> {
         seeds = [b"pool", pool.token_a_mint.as_ref(), pool.token_b_mint.as_ref()],
         bump = pool.bump,
     )]
-    pub pool: Account<'info, Pool>, // ✅ Automatic owner + discriminator check
+    pub pool: Account<'info, Pool>, //  Automatic owner + discriminator check
 
     #[account(
         mut,

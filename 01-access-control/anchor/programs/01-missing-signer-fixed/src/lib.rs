@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 declare_id!("CtRBdgxU8TpJ9jXVJXyPJrRqj9ByXa7M7ixRerVhF1hX");
 
-/// ✅ FIXED VERSION: Proper Signer Verification
+///  FIXED VERSION: Proper Signer Verification
 /// 
 /// This program correctly implements the security pattern where
 /// privileged operations require the authority to cryptographically
@@ -61,7 +61,7 @@ pub mod missing_signer_fixed {
         Ok(())
     }
 
-    /// ✅ SECURE: Withdraw with proper signer verification
+    ///  SECURE: Withdraw with proper signer verification
     /// 
     /// ## Security Model:
     /// 1. Anchor verifies `authority.is_signer == true` (via Signer type)
@@ -130,7 +130,7 @@ pub struct Deposit<'info> {
     pub system_program: Program<'info, System>,
 }
 
-/// ✅ FIXED: Withdraw accounts with proper security
+///  FIXED: Withdraw accounts with proper security
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
     /// The vault with dual verification:
@@ -142,7 +142,7 @@ pub struct Withdraw<'info> {
     )]
     pub vault: Account<'info, Vault>,
     
-    /// ✅ THE FIX: Changed from AccountInfo to Signer
+    ///  THE FIX: Changed from AccountInfo to Signer
     /// 
     /// Anchor generates this check:
     /// ```

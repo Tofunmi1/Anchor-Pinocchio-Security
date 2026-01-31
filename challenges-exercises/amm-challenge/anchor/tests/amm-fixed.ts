@@ -133,7 +133,7 @@ describe("AMM Fixed - Security Verification", () => {
   // Pool Initialization
   // ════════════════════════════════════════════════════════════
   describe("Pool Setup", () => {
-    it("✅ initializes pool with PDA seeds (FIX #8)", async () => {
+    it(" initializes pool with PDA seeds (FIX #8)", async () => {
       await program.methods
         .initialize(new anchor.BN(30)) // 0.3% fee
         .accounts({
@@ -156,7 +156,7 @@ describe("AMM Fixed - Security Verification", () => {
       console.log("    Pool initialized with deterministic PDA");
     });
 
-    it("✅ Alice adds initial liquidity", async () => {
+    it(" Alice adds initial liquidity", async () => {
       const minLpTokens = 0; // Accept any for initial liquidity
 
       await program.methods
@@ -190,7 +190,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #1: Slippage Protection
   // ════════════════════════════════════════════════════════════
   describe("FIX #1: Slippage Protection", () => {
-    it("✅ swap enforces min_amount_out", async () => {
+    it(" swap enforces min_amount_out", async () => {
       const amountIn = 10_000;
       const minAmountOut = 9_900; // Expect ~0.3% fee, so ~9970 out
       
@@ -216,7 +216,7 @@ describe("AMM Fixed - Security Verification", () => {
       console.log("    Swap with reasonable slippage: SUCCESS");
     });
 
-    it("✅ swap REJECTS when output below min_amount_out", async () => {
+    it(" swap REJECTS when output below min_amount_out", async () => {
       const amountIn = 10_000;
       const unreasonableMinOut = 15_000; // More than input - impossible!
 
@@ -251,7 +251,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #2: Overflow Protection (u128 math)
   // ════════════════════════════════════════════════════════════
   describe("FIX #2: Overflow Protection", () => {
-    it("✅ uses u128 for K calculation (prevents overflow)", async () => {
+    it(" uses u128 for K calculation (prevents overflow)", async () => {
       /**
        * The fixed version uses:
        *   let k: u128 = (reserve_a as u128) * (reserve_b as u128);
@@ -275,7 +275,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #3: TWAP Oracle
   // ════════════════════════════════════════════════════════════
   describe("FIX #3: TWAP Oracle", () => {
-    it("✅ provides TWAP instead of manipulable spot price", async () => {
+    it(" provides TWAP instead of manipulable spot price", async () => {
       // Get TWAP
       const result = await program.methods
         .getTwap(new anchor.BN(60)) // 60 second TWAP
@@ -288,7 +288,7 @@ describe("AMM Fixed - Security Verification", () => {
       console.log("    TWAP is resistant to flash loan manipulation");
     });
 
-    it("✅ spot price clearly marked for UI only", async () => {
+    it(" spot price clearly marked for UI only", async () => {
       const result = await program.methods
         .getSpotPrice()
         .accounts({
@@ -305,7 +305,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #4: Signer Check on Withdraw
   // ════════════════════════════════════════════════════════════
   describe("FIX #4: Signer Check on Withdraw", () => {
-    it("✅ remove_liquidity requires LP owner signature", async () => {
+    it(" remove_liquidity requires LP owner signature", async () => {
       // First, give Bob some LP tokens by adding liquidity
       await program.methods
         .addLiquidity(
@@ -354,7 +354,7 @@ describe("AMM Fixed - Security Verification", () => {
       console.log("    Bob withdrew own LP tokens: SUCCESS");
     });
 
-    it("✅ REJECTS withdrawal without LP owner signature", async () => {
+    it(" REJECTS withdrawal without LP owner signature", async () => {
       /**
        * In the fixed version, lp_owner is Signer<'info>
        * Bob cannot withdraw Alice's LP tokens without her signature
@@ -372,7 +372,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #5: Fee Rounding (Ceiling Division)
   // ════════════════════════════════════════════════════════════
   describe("FIX #5: Fee Rounding", () => {
-    it("✅ fee is never zero for non-zero amounts", async () => {
+    it(" fee is never zero for non-zero amounts", async () => {
       /**
        * Fixed formula: fee = ceil(amount * fee_bps / 10000)
        *              = (amount * fee_bps + 9999) / 10000
@@ -400,7 +400,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #6: Checks-Effects-Interactions Pattern
   // ════════════════════════════════════════════════════════════
   describe("FIX #6: CEI Pattern", () => {
-    it("✅ state updates before external calls", async () => {
+    it(" state updates before external calls", async () => {
       /**
        * Fixed order in swap():
        *   1. Checks: validate inputs, calculate amounts
@@ -423,7 +423,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #7: Typed Account with Owner Check
   // ════════════════════════════════════════════════════════════
   describe("FIX #7: Owner Verification", () => {
-    it("✅ pool is Account<Pool>, not UncheckedAccount", async () => {
+    it(" pool is Account<Pool>, not UncheckedAccount", async () => {
       /**
        * Fixed version uses:
        *   pub pool: Account<'info, Pool>
@@ -452,7 +452,7 @@ describe("AMM Fixed - Security Verification", () => {
   // FIX #8: PDA Seeds for Deterministic Address
   // ════════════════════════════════════════════════════════════
   describe("FIX #8: PDA Seeds", () => {
-    it("✅ pool address is deterministic based on token pair", async () => {
+    it(" pool address is deterministic based on token pair", async () => {
       // Derive expected PDA
       const [expectedPool] = PublicKey.findProgramAddressSync(
         [Buffer.from("pool"), tokenAMint.toBuffer(), tokenBMint.toBuffer()],
@@ -466,7 +466,7 @@ describe("AMM Fixed - Security Verification", () => {
       console.log("    Cannot front-run initialization ✓");
     });
 
-    it("✅ same token pair always derives same pool", async () => {
+    it(" same token pair always derives same pool", async () => {
       // Re-derive should give same address
       const [derivedPool] = PublicKey.findProgramAddressSync(
         [Buffer.from("pool"), tokenAMint.toBuffer(), tokenBMint.toBuffer()],
@@ -489,14 +489,14 @@ describe("AMM Fixed - Security Verification", () => {
       console.log("  ╔═══════════════════════════════════════════════════════════════╗");
       console.log("  ║              FIXED AMM - SECURITY VERIFICATION                ║");
       console.log("  ╠═══════════════════════════════════════════════════════════════╣");
-      console.log("  ║  ✅ #1  Slippage protection with min_amount_out               ║");
-      console.log("  ║  ✅ #2  u128 math prevents overflow in K calculation          ║");
-      console.log("  ║  ✅ #3  TWAP oracle resistant to flash loan manipulation      ║");
-      console.log("  ║  ✅ #4  Signer<'info> enforces LP owner authorization         ║");
-      console.log("  ║  ✅ #5  Ceiling division ensures fee > 0 always               ║");
-      console.log("  ║  ✅ #6  CEI pattern: state updates before external calls      ║");
-      console.log("  ║  ✅ #7  Account<Pool> verifies owner + discriminator          ║");
-      console.log("  ║  ✅ #8  PDA seeds provide deterministic pool addresses        ║");
+      console.log("  ║   #1  Slippage protection with min_amount_out               ║");
+      console.log("  ║   #2  u128 math prevents overflow in K calculation          ║");
+      console.log("  ║   #3  TWAP oracle resistant to flash loan manipulation      ║");
+      console.log("  ║   #4  Signer<'info> enforces LP owner authorization         ║");
+      console.log("  ║   #5  Ceiling division ensures fee > 0 always               ║");
+      console.log("  ║   #6  CEI pattern: state updates before external calls      ║");
+      console.log("  ║   #7  Account<Pool> verifies owner + discriminator          ║");
+      console.log("  ║   #8  PDA seeds provide deterministic pool addresses        ║");
       console.log("  ╚═══════════════════════════════════════════════════════════════╝");
       console.log("");
     });

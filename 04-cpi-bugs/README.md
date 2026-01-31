@@ -99,7 +99,7 @@ pub fn cpi_log(ctx: Context<CpiLog>) -> Result<()> {
 ### Fixed Code
 
 ```rust
-// ✅ SECURE: Anchor validates Program ID automatically
+//  SECURE: Anchor validates Program ID automatically
 #[derive(Accounts)]
 pub struct CpiLog<'info> {
     pub target_program: Program<'info, Token>,  // Must be Token Program
@@ -189,7 +189,7 @@ pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
 ### Fixed Code
 
 ```rust
-// ✅ SECURE: PDA derivation enforced
+//  SECURE: PDA derivation enforced
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
     #[account(
@@ -279,7 +279,7 @@ pub fn proxied_cpi(ctx: Context<ProxiedCpi>, data: Vec<u8>) -> Result<()> {
 ### Fixed Code
 
 ```rust
-// ✅ SECURE: Program controls instruction construction
+//  SECURE: Program controls instruction construction
 pub fn claim_reward(ctx: Context<ClaimReward>) -> Result<()> {
     const REWARD_AMOUNT: u64 = 10_000;  // Fixed, not user-supplied
 

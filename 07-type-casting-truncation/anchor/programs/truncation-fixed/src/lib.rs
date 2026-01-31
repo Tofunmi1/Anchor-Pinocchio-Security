@@ -25,7 +25,7 @@ pub mod truncation_fixed {
         msg!("Value: {}, Multiplier: {}", state.value, multiplier);
         msg!("Result (u128): {}", result_u128);
         
-        // ✅ FIXED: try_from returns error if truncation would occur
+        //  FIXED: try_from returns error if truncation would occur
         let result: u64 = u64::try_from(result_u128)
             .map_err(|_| error!(ErrorCode::Overflow))?;
         
